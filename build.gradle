@@ -1,0 +1,15 @@
+apply plugin: 'java'
+
+group 'elec332'
+version '0.0'
+archivesBaseName = 'PROM-Programmer'
+
+sourceCompatibility = 1.8
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    compile 'com.jamierf:rxtx:1.2'
+}
