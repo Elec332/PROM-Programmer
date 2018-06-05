@@ -7,4 +7,6 @@ public interface IPROMHandler {
 
     public void registerPROMType(IPROMData data);
 
+    public IPROMLink linkPROM(IPROMData data);
+
 }
