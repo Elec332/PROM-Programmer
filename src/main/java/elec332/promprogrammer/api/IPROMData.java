@@ -1,7 +1,5 @@
 package elec332.promprogrammer.api;
 
-import java.util.List;
-
 /**
  * Created by Elec332 on 22-5-2018
  */
@@ -22,6 +20,8 @@ public interface IPROMData {
     public void writeByte(int address, byte data, Loaded link);
 
     public int readByte(int address, Loaded link);
+
+    public int getIODelay();
 
     public interface Loaded {
 

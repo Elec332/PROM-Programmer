@@ -11,5 +11,5 @@ repositories {
 }
 
 dependencies {
-    compile 'com.jamierf:rxtx:1.2'
+    compile 'com.neuronrobotics:nrjavaserial:3.12.1'
 }

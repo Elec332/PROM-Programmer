@@ -1,48 +1,121 @@
 package elec332.promprogrammer.impl;
 
-import elec332.promprogrammer.api.IPROMData;
-import elec332.promprogrammer.api.IPROMHandler;
-import elec332.promprogrammer.api.IPROMLink;
-import elec332.promprogrammer.db.CAT28C16A;
-import elec332.promprogrammer.impl.util.SerialHelper;
+import com.sun.istack.internal.Nullable;
+import elec332.promprogrammer.api.*;
 import gnu.io.SerialPort;
+
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
+import java.util.*;
 
 /**
  * Created by Elec332 on 22-5-2018
  */
-public enum PROMHandler implements IPROMHandler {
+enum PROMHandler implements IPROMHandler {
 
     INSTANCE;
 
     PROMHandler(){
         try {
-            this.port = SerialHelper.connect("??", 9600);
-            link = null;
+            Thread.setDefaultUncaughtExceptionHandler((t, e) -> {
+                disconnectLink();
+                System.err.print("Exception in thread \"" + t.getName() + "\" ");
+                e.printStackTrace(System.err);
+                System.exit(1);
+            });
+            Runtime.getRuntime().addShutdownHook(new Thread(this::disconnectLink));
+            this.port = SerialHelper.connect("COM3", 57600);
+            Thread.sleep(1500);
+            this.link = null;
+            this.registry = new HashMap<>();
+            this.names = Collections.unmodifiableSet(this.registry.keySet());
+            this.cRegistry = new HashMap<>();
         } catch (Exception e){
-            throw new ExceptionInInitializerError("Failed to initialize PROM-Manager");
+            throw new ExceptionInInitializerError(new RuntimeException("Failed to initialize PROM-Manager", e));
         }
     }
 
+    private final Map<String, IPROMData> registry;
+    private final Map<Class<? extends IPROMData>, IPROMData> cRegistry;
+    private final Set<String> names;
     private final SerialPort port;
     private PROMLink link;
 
     @Override
     public void registerPROMType(IPROMData data) {
-
+        String name = Objects.requireNonNull(data).getName();
+        if (!name.equals(name.toUpperCase())){
+            throw new IllegalArgumentException("Letters in PROM name must be uppercase");
+        }
+        if (this.registry.containsKey(name)){
+            throw new IllegalArgumentException("PROM type with name " + name + " already exists!");
+        }
+        this.registry.put(name, data);
+        this.cRegistry.put(data.getClass(), data);
     }
 
     @Override
-    public IPROMLink linkPROM(IPROMData data) {
-        if (link != null){
-            link.disconnect();
-            link = null;
+    @Nullable
+    public IPROMData getPROMData(String name) {
+        return this.registry.get(Objects.requireNonNull(name).toUpperCase());
+    }
+
+    @Override
+    @SuppressWarnings("all")
+    public <P extends IPROMData> P getPROMData(Class<P> type) {
+        return (P) cRegistry.get(type);
+    }
+
+    @Override
+    public Set<String> getRegisteredPROMs() {
+        return this.names;
+    }
+
+    @Override
+    public IPROMLink linkPROM(IPROMData data, BitOrder order) {
+        disconnectLink();
+        if (!this.registry.containsKey(Objects.requireNonNull(data).getName())){
+            throw new IllegalArgumentException("PROM " + data.getName() + " has not been registered!");
         }
-        link = new PROMLink(data, port);
-        return link;
+        if (getPROMData(data.getName()) != data || getPROMData(data.getClass()) != data) { //Don't try to trick the system...
+            throw new IllegalArgumentException("Please use the original registered PROM data!");
+        }
+        this.link = new PROMLink(data, port, Objects.requireNonNull(order));
+        return this.link;
+    }
+
+    void disconnectLink(){
+        if (this.link != null){
+            this.link.disconnect();
+            this.link = null;
+        }
     }
 
     static {
-        INSTANCE.registerPROMType(new CAT28C16A());
+        try {
+            register();
+            for (String s : SerialHelper.getPackageContent("elec332.promprogrammer.db")){
+                Class<?> c = Class.forName(s);
+                Constructor<?> ctr = c.getDeclaredConstructor();
+                ctr.setAccessible(true);
+                ctr.newInstance();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new ExceptionInInitializerError("Failed to register PROMHandler");
+        }
+    }
+
+    private static void register() throws Exception {
+        Field f = PROMAPI.class.getDeclaredField("handler");
+        f.setAccessible(true);
+        int i = f.getModifiers();
+        Field modifier = f.getClass().getDeclaredField("modifiers");
+        i &= -17;
+        modifier.setAccessible(true);
+        modifier.setInt(f, i);
+        f.set(null, INSTANCE);
+        f.setAccessible(false);
     }
 
 }
