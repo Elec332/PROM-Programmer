@@ -1,6 +1,5 @@
 package elec332.promprogrammer.impl;
 
-import com.sun.istack.internal.Nullable;
 import elec332.promprogrammer.api.*;
 import gnu.io.SerialPort;
 
@@ -55,7 +54,6 @@ enum PROMHandler implements IPROMHandler {
     }
 
     @Override
-    @Nullable
     public IPROMData getPROMData(String name) {
         return this.registry.get(Objects.requireNonNull(name).toUpperCase());
     }

@@ -22,6 +22,11 @@ public class PROMAPI {
             }
 
             @Override
+            public <P extends IPROMData> P getPROMData(Class<P> type) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
             public IPROMData getPROMData(String name) {
                 throw new UnsupportedOperationException();
             }

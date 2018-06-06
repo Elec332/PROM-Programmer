@@ -1,13 +1,23 @@
 apply plugin: 'java'
 
 group 'elec332'
-version '0.0'
+version '0.1'
 archivesBaseName = 'PROM-Programmer'
 
 sourceCompatibility = 1.8
 
 repositories {
     mavenCentral()
+}
+
+tasks.build.dependsOn("grabDependancies")
+
+task grabDependancies(type: Jar) {
+    from {
+        configurations.compile.collect {
+            it.isDirectory() ? it : zipTree(it)
+        }
+    }
 }
 
 dependencies {
