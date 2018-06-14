@@ -4,11 +4,10 @@ import gnu.io.CommPort;
 import gnu.io.CommPortIdentifier;
 import gnu.io.SerialPort;
 
-import java.io.File;
-import java.io.IOException;
+import java.net.URI;
 import java.net.URL;
+import java.nio.file.*;
 import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * Created by Elec332 on 30-5-2018.
@@ -32,15 +31,24 @@ class SerialHelper {
         }
     }
 
-    static List<String> getPackageContent(String p) throws IOException {
+    static List<String> getPackageContent(String p) throws Exception {
         final String packageName = p.replace('.', '/');
         List<String> list = new ArrayList<>();
         Enumeration<URL> urls = Thread.currentThread().getContextClassLoader().getResources(packageName);
         while (urls.hasMoreElements()) {
-            URL url = urls.nextElement();
-            File dir = new File(url.getFile());
-            String base = dir.getPath();
-            list.addAll(Arrays.stream(Objects.requireNonNull(dir.listFiles())).map(file -> p.replace('/', '.') + "." + file.getPath().replace(base, "").substring(1).replace(".class", "")).collect(Collectors.toList()));
+            URI uri = urls.nextElement().toURI();
+            Path ph;
+            if (uri.getScheme().equals("jar")) {
+                FileSystem fileSystem = FileSystems.newFileSystem(uri, Collections.emptyMap());
+                ph = fileSystem.getPath(packageName);
+            } else {
+                ph = Paths.get(uri);
+            }
+            Files.walk(ph, 1).forEach(path -> {
+                if (!path.toString().equals(ph.toString())) {
+                    list.add((packageName + "." + path.toString().substring(path.getParent().toString().length() + 1).replace(".class", "")).replace("/", "."));
+                }
+            });
         }
         return list;
     }

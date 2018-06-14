@@ -23,8 +23,6 @@ enum PROMHandler implements IPROMHandler {
                 System.exit(1);
             });
             Runtime.getRuntime().addShutdownHook(new Thread(this::disconnectLink));
-            this.port = SerialHelper.connect("COM3", 57600);
-            Thread.sleep(1500);
             this.link = null;
             this.registry = new HashMap<>();
             this.names = Collections.unmodifiableSet(this.registry.keySet());
@@ -37,7 +35,7 @@ enum PROMHandler implements IPROMHandler {
     private final Map<String, IPROMData> registry;
     private final Map<Class<? extends IPROMData>, IPROMData> cRegistry;
     private final Set<String> names;
-    private final SerialPort port;
+    private SerialPort port;
     private PROMLink link;
 
     @Override
@@ -78,8 +76,23 @@ enum PROMHandler implements IPROMHandler {
         if (getPROMData(data.getName()) != data || getPROMData(data.getClass()) != data) { //Don't try to trick the system...
             throw new IllegalArgumentException("Please use the original registered PROM data!");
         }
+        if (port == null){
+            throw new IllegalStateException("COM port hasn't been set!");
+        }
         this.link = new PROMLink(data, port, Objects.requireNonNull(order));
         return this.link;
+    }
+
+    @Override
+    public IPROMHandler setCOMPort(String port) {
+        try {
+            this.disconnectLink();
+            this.port = SerialHelper.connect(port, 57600);
+            Thread.sleep(1500);
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Failed to connect to port: " + port, e);
+        }
+        return this;
     }
 
     void disconnectLink(){

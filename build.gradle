@@ -10,14 +10,16 @@ repositories {
     mavenCentral()
 }
 
-tasks.build.dependsOn("grabDependancies")
+tasks.build.dependsOn("buildDep")
 
-task grabDependancies(type: Jar) {
+task buildDep(type: Jar) {
+    baseName = project.name + '-all'
     from {
         configurations.compile.collect {
             it.isDirectory() ? it : zipTree(it)
         }
     }
+    with jar
 }
 
 dependencies {

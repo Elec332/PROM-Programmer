@@ -41,6 +41,11 @@ public class PROMAPI {
                 throw new UnsupportedOperationException();
             }
 
+            @Override
+            public IPROMHandler setCOMPort(String port) {
+                throw new UnsupportedOperationException();
+            }
+
         };
 
         try {

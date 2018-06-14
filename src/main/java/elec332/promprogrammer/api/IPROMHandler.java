@@ -25,4 +25,6 @@ public interface IPROMHandler {
 
     public IPROMLink linkPROM(IPROMData data, BitOrder order);
 
+    public IPROMHandler setCOMPort(String port);
+
 }
