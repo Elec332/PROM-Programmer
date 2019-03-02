@@ -27,4 +27,6 @@ public interface IPROMHandler {
 
     public IPROMHandler setCOMPort(String port);
 
+    public void disconnect();
+
 }

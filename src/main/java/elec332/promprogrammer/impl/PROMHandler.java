@@ -95,6 +95,13 @@ enum PROMHandler implements IPROMHandler {
         return this;
     }
 
+    @Override
+    public void disconnect() {
+        disconnectLink();
+        this.port.close();
+        this.port = null;
+    }
+
     void disconnectLink(){
         if (this.link != null){
             this.link.disconnect();

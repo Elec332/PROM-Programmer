@@ -46,6 +46,11 @@ public class PROMAPI {
                 throw new UnsupportedOperationException();
             }
 
+            @Override
+            public void disconnect() {
+                throw new UnsupportedOperationException();
+            }
+
         };
 
         try {

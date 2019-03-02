@@ -9,7 +9,7 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
-import java.util.function.IntFunction;
+import java.util.function.IntUnaryOperator;
 
 /**
  * Created by Elec332 on 30-5-2018.
@@ -81,6 +81,16 @@ class PROMLink implements IPROMLink {
     @Override
     public boolean isConnected() {
         return port != null;
+    }
+
+    @Override
+    public IPROMData getPROMType() {
+        return data;
+    }
+
+    @Override
+    public BitOrder getBitOrder() {
+        return order;
     }
 
     @Override
@@ -160,13 +170,13 @@ class PROMLink implements IPROMLink {
     }
 
     @Override
-    public void write(IntFunction<Integer> dataFetcher, boolean checkIntegrity) {
+    public void write(IntUnaryOperator dataFetcher, boolean checkIntegrity) {
         List<String> check = new ArrayList<>();
 
         for (int i = 0; i < addresses; i += 16) {
             StringBuilder sb = new StringBuilder(String.format("%03x: ", i));
             for (int j = 0; j < 16; j++) {
-                int toSend = dataFetcher.apply(i + j);
+                int toSend = dataFetcher.applyAsInt(i + j);
                 sb.append(String.format(" %02x", toSend));
                 if (j == 7) {
                     sb.append("  ");

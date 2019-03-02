@@ -1,7 +1,7 @@
 package elec332.promprogrammer.api;
 
 import java.util.function.Consumer;
-import java.util.function.IntFunction;
+import java.util.function.IntUnaryOperator;
 
 /**
  * Created by Elec332 on 30-5-2018.
@@ -9,6 +9,10 @@ import java.util.function.IntFunction;
 public interface IPROMLink {
 
     public boolean isConnected();
+
+    public IPROMData getPROMType();
+
+    public BitOrder getBitOrder();
 
     default public void writeByte(int address, int data){
         writeByteWithReset(address, data);
@@ -36,7 +40,7 @@ public interface IPROMLink {
 
     public void write(int[] data, boolean checkIntegrity); //This will murder your RAM, revive it, and kill it again...
 
-    public void write(IntFunction<Integer> dataFetcher, boolean checkIntegrity);
+    public void write(IntUnaryOperator dataFetcher, boolean checkIntegrity);
 
     public void clearEEPROM();
 
